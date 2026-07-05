@@ -1,0 +1,251 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  phone         String    @unique
+  passwordHash  String    @map("password_hash")
+  dateOfBirth   DateTime  @map("date_of_birth")
+  country       String
+  createdAt     DateTime  @default(now()) @map("created_at")
+  role          String    @default("user") // "user" or "admin"
+
+  profile           Profile?
+  usernameHistory   UsernameHistory[]
+  sentFriendships   Friendship[]      @relation("SentFriendships")
+  receivedFriendships Friendship[]    @relation("ReceivedFriendships")
+  chatMembers       ChatMember[]
+  messages          Message[]
+  messageStatuses   MessageStatus[]
+  callsInitiated    Call[]            @relation("InitiatedCalls")
+  callParticipants  CallParticipant[]
+  devices           Device[]
+  blockedUsers      BlockedUser[]     @relation("Blocker")
+  blockedBy         BlockedUser[]     @relation("Blocked")
+  mutedUsers        MutedUser[]       @relation("MutedBy")
+  mutedByUsers      MutedUser[]       @relation("MutedUser")
+  reportsFiled      Report[]          @relation("Reporter")
+  preKeyBundles     PreKeyBundle[]
+
+  @@map("users")
+}
+
+model Profile {
+  userId      String    @id @unique @map("user_id")
+  username    String    @unique
+  displayName String    @map("display_name")
+  bio         String?
+  avatarUrl   String?   @map("avatar_url")
+  gender      String?
+  lastSeenAt  DateTime? @map("last_seen_at")
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+model UsernameHistory {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  oldUsername String   @map("old_username")
+  changedAt   DateTime @default(now()) @map("changed_at")
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("username_history")
+}
+
+model Friendship {
+  id          String       @id @default(uuid())
+  requesterId String       @map("requester_id")
+  addresseeId String       @map("addressee_id")
+  status      String       // PENDING, ACCEPTED, BLOCKED
+  createdAt   DateTime     @default(now()) @map("created_at")
+
+  requester   User         @relation("SentFriendships", fields: [requesterId], references: [id], onDelete: Cascade)
+  addressee   User         @relation("ReceivedFriendships", fields: [addresseeId], references: [id], onDelete: Cascade)
+
+  @@unique([requesterId, addresseeId])
+  @@map("friendships")
+}
+
+model Chat {
+  id        String       @id @default(uuid())
+  type      String       // DIRECT, GROUP
+  createdBy String       @map("created_by")
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  members   ChatMember[]
+  messages  Message[]
+  calls     Call[]
+
+  @@map("chats")
+}
+
+model ChatMember {
+  chatId     String    @map("chat_id")
+  userId     String    @map("user_id")
+  role       String    @default("member") // admin, member
+  joinedAt   DateTime  @default(now()) @map("joined_at")
+  mutedUntil DateTime? @map("muted_until")
+
+  chat       Chat      @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([chatId, userId])
+  @@map("chat_members")
+}
+
+model Message {
+  id                 String       @id @default(uuid())
+  chatId             String       @map("chat_id")
+  senderId           String       @map("sender_id")
+  clientTempId       String?      @map("client_temp_id")
+  ciphertext         String
+  senderKeyId        String       @map("sender_key_id")
+  replyToId          String?      @map("reply_to_id")
+  createdAt          DateTime     @default(now()) @map("created_at")
+  editedAt           DateTime?    @map("edited_at")
+  deletedForEveryone Boolean      @default(false) @map("deleted_for_everyone")
+
+  chat               Chat         @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  sender             User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  replyTo            Message?     @relation("Replies", fields: [replyToId], references: [id])
+  replies            Message[]    @relation("Replies")
+  attachments        Attachment[]
+  statuses           MessageStatus[]
+
+  @@index([chatId, createdAt])
+  @@map("messages")
+}
+
+model Attachment {
+  id              String   @id @default(uuid())
+  messageId       String   @map("message_id")
+  storageProvider String   @map("storage_provider") // cloudinary, s3
+  storageKey      String   @map("storage_key")
+  mimeType        String   @map("mime_type")
+  sizeBytes       Int      @map("size_bytes")
+
+  message         Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@map("attachments")
+}
+
+model MessageStatus {
+  messageId String            @map("message_id")
+  userId    String            @map("user_id")
+  status    String            // DELIVERED, READ
+  updatedAt DateTime          @updatedAt @map("updated_at")
+
+  message   Message           @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([messageId, userId])
+  @@map("message_status")
+}
+
+model Call {
+  id           String            @id @default(uuid())
+  chatId       String            @map("chat_id")
+  initiatorId  String            @map("initiator_id")
+  type         String            // voice, video
+  startedAt    DateTime          @default(now()) @map("started_at")
+  endedAt      DateTime?         @map("ended_at")
+  recordingUrl String?           @map("recording_url")
+
+  chat         Chat              @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  initiator    User              @relation("InitiatedCalls", fields: [initiatorId], references: [id], onDelete: Cascade)
+  participants CallParticipant[]
+
+  @@map("calls")
+}
+
+model CallParticipant {
+  callId               String    @map("call_id")
+  userId               String    @map("user_id")
+  joinedAt             DateTime  @default(now()) @map("joined_at")
+  leftAt               DateTime? @map("left_at")
+  consentedToRecording Boolean   @default(false) @map("consented_to_recording")
+
+  call                 Call      @relation(fields: [callId], references: [id], onDelete: Cascade)
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([callId, userId])
+  @@map("call_participants")
+}
+
+model Device {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  refreshToken String   @unique @map("refresh_token")
+  userAgent    String?  @map("user_agent")
+  ipAddress    String?  @map("ip_address")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("devices")
+}
+
+model BlockedUser {
+  blockerId String   @map("blocker_id")
+  blockedId String   @map("blocked_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  blocker   User     @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked   User     @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@id([blockerId, blockedId])
+  @@map("blocked_users")
+}
+
+model MutedUser {
+  mutedById   String   @map("muted_by_id")
+  mutedUserId String   @map("muted_user_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  mutedBy     User     @relation("MutedBy", fields: [mutedById], references: [id], onDelete: Cascade)
+  mutedUser   User     @relation("MutedUser", fields: [mutedUserId], references: [id], onDelete: Cascade)
+
+  @@id([mutedById, mutedUserId])
+  @@map("muted_users")
+}
+
+model Report {
+  id         String   @id @default(uuid())
+  reporterId String   @map("reporter_id")
+  targetType String   @map("target_type")
+  targetId   String   @map("target_id")
+  reason     String
+  status     String   @default("pending")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  reporter   User     @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@map("reports")
+}
+
+model PreKeyBundle {
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id")
+  deviceId       String   @map("device_id")
+  identityPublicKey String @map("identity_public_key")
+  signedPreKeyId Int      @map("signed_pre_key_id")
+  signedPreKey   String   @map("signed_pre_key")
+  signature      String
+  oneTimePreKeys String
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, deviceId])
+  @@map("pre_key_bundles")
+}

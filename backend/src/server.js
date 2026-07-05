@@ -84,7 +84,7 @@ fastify.register(jwt, {
 
 // Serve frontend assets
 fastify.register(fastifyStatic, {
-  root: path.join(__dirname, '../../frontend/dist'),
+  root: path.join(__dirname, '../../frontend/build'),
   prefix: '/'
 });
 

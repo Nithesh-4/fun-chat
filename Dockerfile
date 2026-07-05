@@ -16,7 +16,7 @@ RUN cd backend && npm install --omit=dev
 
 # Copy backend files and pre-compiled frontend static folder
 COPY backend/ ./backend/
-COPY --from=frontend-builder /app/frontend/build /app/frontend/dist
+COPY --from=frontend-builder /app/frontend/build /app/frontend/build
 
 # Navigate to backend, load env, and compile Prisma ORM client
 WORKDIR /app/backend

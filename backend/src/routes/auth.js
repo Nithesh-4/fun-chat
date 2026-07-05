@@ -16,19 +16,30 @@ module.exports = async function (fastify, opts) {
       gender
     } = request.body;
 
-    // Validate age (must be 18+)
-    const dob = new Date(dateOfBirth);
-    if (isNaN(dob.getTime())) {
-      return reply.status(400).send({ error: 'Validation Error', message: 'Invalid date of birth format.' });
+    // Validate compulsory fields
+    if (!email || !username || !displayName || !password || !gender) {
+      return reply.status(400).send({
+        error: 'Validation Error',
+        message: 'Full name, username, email, password, and gender are compulsory.'
+      });
     }
-    const today = new Date();
-    let age = today.getFullYear() - dob.getFullYear();
-    const monthDiff = today.getMonth() - dob.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-      age--;
-    }
-    if (age < 18) {
-      return reply.status(403).send({ error: 'Age Restriction', message: 'Registration is restricted to adults (18+) only.' });
+
+    // Validate age if DOB is provided (must be 18+)
+    let dob = null;
+    if (dateOfBirth && dateOfBirth.toString().trim() !== '') {
+      dob = new Date(dateOfBirth);
+      if (isNaN(dob.getTime())) {
+        return reply.status(400).send({ error: 'Validation Error', message: 'Invalid date of birth format.' });
+      }
+      const today = new Date();
+      let age = today.getFullYear() - dob.getFullYear();
+      const monthDiff = today.getMonth() - dob.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+        age--;
+      }
+      if (age < 18) {
+        return reply.status(403).send({ error: 'Age Restriction', message: 'Registration is restricted to adults (18+) only.' });
+      }
     }
 
     // Validate username rules: 4-20 chars, letters/numbers/underscores only
@@ -42,9 +53,13 @@ module.exports = async function (fastify, opts) {
 
     try {
       // Check username / email / phone uniqueness
+      const hasPhone = phone && phone.toString().trim() !== '';
       const existingUser = await prisma.user.findFirst({
         where: {
-          OR: [{ email }, { phone }]
+          OR: [
+            { email },
+            ...(hasPhone ? [{ phone }] : [])
+          ]
         }
       });
       if (existingUser) {
@@ -66,10 +81,10 @@ module.exports = async function (fastify, opts) {
         const user = await tx.user.create({
           data: {
             email,
-            phone,
+            phone: hasPhone ? phone : null,
             passwordHash,
             dateOfBirth: dob,
-            country
+            country: (country && country.toString().trim() !== '') ? country : null
           }
         });
 

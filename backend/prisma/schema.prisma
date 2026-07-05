@@ -10,10 +10,10 @@ generator client {
 model User {
   id            String    @id @default(uuid())
   email         String    @unique
-  phone         String    @unique
+  phone         String?   @unique
   passwordHash  String    @map("password_hash")
-  dateOfBirth   DateTime  @map("date_of_birth")
-  country       String
+  dateOfBirth   DateTime? @map("date_of_birth")
+  country       String?
   createdAt     DateTime  @default(now()) @map("created_at")
   role          String    @default("user") // "user" or "admin"
 
@@ -43,7 +43,7 @@ model Profile {
   displayName String    @map("display_name")
   bio         String?
   avatarUrl   String?   @map("avatar_url")
-  gender      String?
+  gender      String
   lastSeenAt  DateTime? @map("last_seen_at")
 
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)

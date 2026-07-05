@@ -59,7 +59,7 @@ export default function App() {
   const [regCountry, setRegCountry] = useState('United States');
   const [regUsername, setRegUsername] = useState('');
   const [regDisplayName, setRegDisplayName] = useState('');
-  const [regGender, setRegGender] = useState('male');
+  const [regGender, setRegGender] = useState('');
 
   // App navigation state
   const [navTab, setNavTab] = useState('chats'); // chats | friends | settings
@@ -766,11 +766,10 @@ export default function App() {
               </div>
 
               <div className="form-group">
-                <label>Phone Number</label>
+                <label>Phone Number (Optional)</label>
                 <input
                   type="text"
                   placeholder="+1234567890"
-                  required
                   value={regPhone}
                   onChange={e => setRegPhone(e.target.value)}
                 />
@@ -789,20 +788,18 @@ export default function App() {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label>Date of Birth</label>
+                  <label>Date of Birth (Optional)</label>
                   <input
                     type="date"
-                    required
                     value={regDob}
                     onChange={e => setRegDob(e.target.value)}
                   />
                 </div>
                 <div className="form-group">
-                  <label>Country</label>
+                  <label>Country (Optional)</label>
                   <input
                     type="text"
                     placeholder="United States"
-                    required
                     value={regCountry}
                     onChange={e => setRegCountry(e.target.value)}
                   />
@@ -810,8 +807,9 @@ export default function App() {
               </div>
 
               <div className="form-group">
-                <label>Gender (optional)</label>
-                <select value={regGender} onChange={e => setRegGender(e.target.value)}>
+                <label>Gender</label>
+                <select required value={regGender} onChange={e => setRegGender(e.target.value)}>
+                  <option value="">Select Gender</option>
                   <option value="male">Male</option>
                   <option value="female">Female</option>
                   <option value="other">Other / Prefer not to say</option>

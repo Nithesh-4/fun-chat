@@ -200,6 +200,65 @@ const start = async () => {
         });
         fastify.log.info('Default test user account seeded successfully (user@funchat.com / userpassword123).');
       }
+
+      // Seed User One and User Two for multi-login testing
+      const u1 = await prisma.user.findUnique({ where: { email: 'user1@funchat.com' } });
+      const u2 = await prisma.user.findUnique({ where: { email: 'user2@funchat.com' } });
+      if (!u1 && !u2) {
+        const pwdHash = await bcrypt.hash('password123', 10);
+        const dob = new Date('1995-05-05');
+        await prisma.$transaction(async (tx) => {
+          const user1 = await tx.user.create({
+            data: {
+              email: 'user1@funchat.com',
+              phone: '+1111111112',
+              passwordHash: pwdHash,
+              dateOfBirth: dob,
+              country: 'United States',
+              role: 'user'
+            }
+          });
+          await tx.profile.create({
+            data: {
+              userId: user1.id,
+              username: 'user_one',
+              displayName: 'User One',
+              gender: 'male',
+              bio: 'Hello from User One!'
+            }
+          });
+
+          const user2 = await tx.user.create({
+            data: {
+              email: 'user2@funchat.com',
+              phone: '+1111111113',
+              passwordHash: pwdHash,
+              dateOfBirth: dob,
+              country: 'United States',
+              role: 'user'
+            }
+          });
+          await tx.profile.create({
+            data: {
+              userId: user2.id,
+              username: 'user_two',
+              displayName: 'User Two',
+              gender: 'female',
+              bio: 'Hello from User Two!'
+            }
+          });
+
+          // Create direct friendship
+          await tx.friendship.create({
+            data: {
+              requesterId: user1.id,
+              addresseeId: user2.id,
+              status: 'ACCEPTED'
+            }
+          });
+        });
+        fastify.log.info('Two test users (user1@funchat.com & user2@funchat.com / password123) and their friendship seeded successfully.');
+      }
     } catch (seedErr) {
       fastify.log.error(`Failed to seed default accounts: ${seedErr.message}`);
     }

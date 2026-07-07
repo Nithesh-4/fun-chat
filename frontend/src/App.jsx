@@ -216,7 +216,7 @@ export default function App() {
     const initGoogle = () => {
       if (window.google) {
         window.google.accounts.id.initialize({
-          client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID || '822363116828-g02gmqfipqsh9h3b6mppocicr9b9dcl9.apps.googleusercontent.com',
+          client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID || '200947288165-ta5kk1hagu0qtek0au0b6325qnt9lts8.apps.googleusercontent.com',
           callback: handleGoogleCredentialResponse
         });
 

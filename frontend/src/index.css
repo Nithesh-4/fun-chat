@@ -1714,6 +1714,12 @@ input:focus, select:focus, textarea:focus {
   color: var(--text-secondary);
 }
 
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+}
+
 .form-row {
   display: flex;
   gap: 1rem;

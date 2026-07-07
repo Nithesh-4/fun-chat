@@ -56,7 +56,6 @@ export default function App() {
   const [regPhone, setRegPhone] = useState('');
   const [regPassword, setRegPassword] = useState('');
   const [regDob, setRegDob] = useState('');
-  const [regCountry, setRegCountry] = useState('United States');
   const [regUsername, setRegUsername] = useState('');
   const [regDisplayName, setRegDisplayName] = useState('');
   const [regGender, setRegGender] = useState('');
@@ -383,7 +382,6 @@ export default function App() {
           phone: regPhone,
           password: regPassword,
           dateOfBirth: regDob,
-          country: regCountry,
           username: regUsername,
           displayName: regDisplayName,
           gender: regGender
@@ -733,7 +731,7 @@ export default function App() {
             <form className="auth-form" onSubmit={handleRegister}>
               <div className="form-row">
                 <div className="form-group">
-                  <label>Full Name</label>
+                  <label>Full Name <span style={{ color: 'var(--accent-error)' }}>*</span></label>
                   <input
                     type="text"
                     placeholder="John Doe"
@@ -743,7 +741,7 @@ export default function App() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Username</label>
+                  <label>Username <span style={{ color: 'var(--accent-error)' }}>*</span></label>
                   <input
                     type="text"
                     placeholder="johndoe_99"
@@ -755,7 +753,7 @@ export default function App() {
               </div>
 
               <div className="form-group">
-                <label>Email Address</label>
+                <label>Email Address <span style={{ color: 'var(--accent-error)' }}>*</span></label>
                 <input
                   type="email"
                   placeholder="name@domain.com"
@@ -766,7 +764,7 @@ export default function App() {
               </div>
 
               <div className="form-group">
-                <label>Phone Number (Optional)</label>
+                <label>Phone Number</label>
                 <input
                   type="text"
                   placeholder="+1234567890"
@@ -776,7 +774,7 @@ export default function App() {
               </div>
 
               <div className="form-group">
-                <label>Password</label>
+                <label>Password <span style={{ color: 'var(--accent-error)' }}>*</span></label>
                 <input
                   type="password"
                   placeholder="••••••••"
@@ -786,28 +784,17 @@ export default function App() {
                 />
               </div>
 
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Date of Birth (Optional)</label>
-                  <input
-                    type="date"
-                    value={regDob}
-                    onChange={e => setRegDob(e.target.value)}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Country (Optional)</label>
-                  <input
-                    type="text"
-                    placeholder="United States"
-                    value={regCountry}
-                    onChange={e => setRegCountry(e.target.value)}
-                  />
-                </div>
+              <div className="form-group">
+                <label>Date of Birth</label>
+                <input
+                  type="date"
+                  value={regDob}
+                  onChange={e => setRegDob(e.target.value)}
+                />
               </div>
 
               <div className="form-group">
-                <label>Gender</label>
+                <label>Gender <span style={{ color: 'var(--accent-error)' }}>*</span></label>
                 <select required value={regGender} onChange={e => setRegGender(e.target.value)}>
                   <option value="">Select Gender</option>
                   <option value="male">Male</option>
@@ -1214,7 +1201,7 @@ export default function App() {
             </div>
             <form onSubmit={handleUpdateProfile} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div className="form-group">
-                <label>Display Name (Full Name)</label>
+                <label>Display Name <span style={{ color: 'var(--accent-error)' }}>*</span></label>
                 <input
                   type="text"
                   required
@@ -1223,7 +1210,7 @@ export default function App() {
                 />
               </div>
               <div className="form-group">
-                <label>Username (Change limits apply)</label>
+                <label>Username <span style={{ color: 'var(--accent-error)' }}>*</span></label>
                 <input
                   type="text"
                   required
@@ -1242,7 +1229,7 @@ export default function App() {
                 )}
               </div>
               <div className="form-group">
-                <label>Bio (status message)</label>
+                <label>Bio</label>
                 <input
                   type="text"
                   placeholder="Available"
@@ -1251,7 +1238,7 @@ export default function App() {
                 />
               </div>
               <div className="form-group">
-                <label>Profile Avatar URL (optional)</label>
+                <label>Profile Avatar URL</label>
                 <input
                   type="text"
                   placeholder="http://url-to-avatar.png"

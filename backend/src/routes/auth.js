@@ -269,34 +269,15 @@ module.exports = async function (fastify, opts) {
     }
 
     try {
-      let payload;
-      if (idToken.startsWith('MOCK-ID-TOKEN-')) {
-        const userType = idToken.split('-')[3]; // MOCK-ID-TOKEN-alice or MOCK-ID-TOKEN-bob
-        if (userType === 'alice') {
-          payload = {
-            email: 'alice.google@funchat.com',
-            name: 'Alice Google',
-            picture: 'https://api.dicebear.com/7.x/adventurer/svg?seed=alice',
-            aud: process.env.GOOGLE_CLIENT_ID || '200947288165-ta5kk1hagu0qtek0au0b6325qnt9lts8.apps.googleusercontent.com'
-          };
-        } else {
-          payload = {
-            email: 'bob.google@funchat.com',
-            name: 'Bob Google',
-            picture: 'https://api.dicebear.com/7.x/adventurer/svg?seed=bob',
-            aud: process.env.GOOGLE_CLIENT_ID || '200947288165-ta5kk1hagu0qtek0au0b6325qnt9lts8.apps.googleusercontent.com'
-          };
-        }
-      } else {
-        const googleRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
-        if (!googleRes.ok) {
-          return reply.status(401).send({ error: 'Unauthorized', message: 'Invalid Google token.' });
-        }
-        payload = await googleRes.json();
-        const allowedClientId = process.env.GOOGLE_CLIENT_ID;
-        if (allowedClientId && payload.aud !== allowedClientId) {
-          return reply.status(401).send({ error: 'Unauthorized', message: 'Token audience mismatch.' });
-        }
+      const googleRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
+      if (!googleRes.ok) {
+        return reply.status(401).send({ error: 'Unauthorized', message: 'Invalid Google token.' });
+      }
+
+      const payload = await googleRes.json();
+      const allowedClientId = process.env.GOOGLE_CLIENT_ID;
+      if (allowedClientId && payload.aud !== allowedClientId) {
+        return reply.status(401).send({ error: 'Unauthorized', message: 'Token audience mismatch.' });
       }
 
       const { email, name, picture } = payload;

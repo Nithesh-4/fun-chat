@@ -890,26 +890,6 @@ export default function App() {
                   Continue with Apple
                 </button>
 
-                <div className="oauth-divider">— DEV MOCK IDP —</div>
-                <div style={{ display: 'flex', gap: '0.5rem', width: '100%', marginTop: '0.25rem' }}>
-                  <button
-                    type="button"
-                    className="oauth-btn"
-                    style={{ flex: 1, justifyContent: 'center' }}
-                    onClick={() => handleGoogleCredentialResponse({ credential: 'MOCK-ID-TOKEN-alice' })}
-                  >
-                    Alice (Mock)
-                  </button>
-                  <button
-                    type="button"
-                    className="oauth-btn"
-                    style={{ flex: 1, justifyContent: 'center' }}
-                    onClick={() => handleGoogleCredentialResponse({ credential: 'MOCK-ID-TOKEN-bob' })}
-                  >
-                    Bob (Mock)
-                  </button>
-                </div>
-
                 <div className="auth-toggle">
                   Don't have an account? <span onClick={() => setAuthScreen('register')}>Register here</span>
                 </div>
@@ -1102,26 +1082,6 @@ export default function App() {
               <div className="oauth-divider">— OR —</div>
 
               <div id="google-signup-div" style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: '0.25rem' }}></div>
-
-              <div className="oauth-divider">— DEV MOCK IDP —</div>
-              <div style={{ display: 'flex', gap: '0.5rem', width: '100%', marginTop: '0.25rem' }}>
-                <button
-                  type="button"
-                  className="oauth-btn"
-                  style={{ flex: 1, justifyContent: 'center' }}
-                  onClick={() => handleGoogleCredentialResponse({ credential: 'MOCK-ID-TOKEN-alice' })}
-                >
-                  Alice (Mock)
-                </button>
-                <button
-                  type="button"
-                  className="oauth-btn"
-                  style={{ flex: 1, justifyContent: 'center' }}
-                  onClick={() => handleGoogleCredentialResponse({ credential: 'MOCK-ID-TOKEN-bob' })}
-                >
-                  Bob (Mock)
-                </button>
-              </div>
 
               <div className="auth-toggle">
                 Already registered? <span onClick={() => setAuthScreen('login')}>Sign in here</span>

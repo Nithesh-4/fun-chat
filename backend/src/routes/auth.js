@@ -234,6 +234,126 @@ module.exports = async function (fastify, opts) {
     }
   });
 
+  // Helper to generate a unique username for Google OAuth registration
+  async function generateUniqueUsername(prismaClient, email, name) {
+    let base = email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '');
+    if (base.length < 4) {
+      base = (base + 'user').substring(0, 10);
+    }
+    base = base.substring(0, 15).toLowerCase();
+
+    let username = base;
+    let isUnique = false;
+    let counter = 0;
+
+    while (!isUnique) {
+      const existing = await prismaClient.profile.findUnique({
+        where: { username }
+      });
+      if (!existing) {
+        isUnique = true;
+      } else {
+        counter++;
+        const suffix = counter.toString();
+        username = base.substring(0, 20 - suffix.length) + suffix;
+      }
+    }
+    return username;
+  }
+
+  // POST /auth/google (Google Sign-In / Auto-Registration)
+  fastify.post('/google', async (request, reply) => {
+    const { idToken } = request.body;
+    if (!idToken) {
+      return reply.status(400).send({ error: 'Validation Error', message: 'ID token is required.' });
+    }
+
+    try {
+      const googleRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
+      if (!googleRes.ok) {
+        return reply.status(401).send({ error: 'Unauthorized', message: 'Invalid Google token.' });
+      }
+
+      const payload = await googleRes.json();
+      const allowedClientId = process.env.GOOGLE_CLIENT_ID;
+      if (allowedClientId && payload.aud !== allowedClientId) {
+        return reply.status(401).send({ error: 'Unauthorized', message: 'Token audience mismatch.' });
+      }
+
+      const { email, name, picture } = payload;
+      if (!email) {
+        return reply.status(400).send({ error: 'Validation Error', message: 'Email not provided by Google.' });
+      }
+
+      let user = await prisma.user.findUnique({
+        where: { email },
+        include: { profile: true }
+      });
+
+      if (!user) {
+        const username = await generateUniqueUsername(prisma, email, name);
+        const passwordHash = await bcrypt.hash(Math.random().toString(36), 10);
+
+        user = await prisma.$transaction(async (tx) => {
+          const newUser = await tx.user.create({
+            data: {
+              email,
+              passwordHash,
+              country: 'System'
+            }
+          });
+
+          const newProfile = await tx.profile.create({
+            data: {
+              userId: newUser.id,
+              username,
+              displayName: name || email.split('@')[0],
+              avatarUrl: picture || null,
+              gender: 'other',
+              bio: 'Joined via Google'
+            }
+          });
+
+          return { ...newUser, profile: newProfile };
+        });
+      }
+
+      const accessToken = fastify.jwt.sign(
+        { userId: user.id, role: user.role },
+        { expiresIn: '1d' }
+      );
+      
+      const refreshToken = fastify.jwt.sign(
+        { userId: user.id, type: 'refresh' },
+        { expiresIn: '7d' }
+      );
+
+      await prisma.device.create({
+        data: {
+          userId: user.id,
+          refreshToken,
+          userAgent: request.headers['user-agent'] || 'Unknown Device',
+          ipAddress: request.ip
+        }
+      });
+
+      return {
+        accessToken,
+        user: {
+          id: user.id,
+          email: user.email,
+          phone: user.phone,
+          role: user.role,
+          displayName: user.profile.displayName,
+          username: user.profile.username
+        }
+      };
+    } catch (err) {
+      fastify.log.error(err);
+      return reply.status(500).send({ error: 'Internal Server Error', message: err.message });
+    }
+  });
+
   // POST /auth/logout (Revoke session)
   fastify.post('/logout', async (request, reply) => {
     const { refreshToken } = request.body;

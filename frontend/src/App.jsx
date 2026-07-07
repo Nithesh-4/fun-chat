@@ -102,6 +102,12 @@ export default function App() {
       ...options.headers
     };
     const res = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
+    
+    const contentType = res.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      throw new Error(`Server returned a non-JSON response (status ${res.status}). Please verify that your REACT_APP_API_URL environment variable points to a running backend server rather than a static site host.`);
+    }
+
     const data = await res.json();
     if (!res.ok) {
       throw new Error(data.message || 'API request failed');

@@ -10,11 +10,7 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - DATABASE_URL=file:/app/backend/data/dev.db
+      - DATABASE_URL=${DATABASE_URL}
+      - DIRECT_URL=${DIRECT_URL}
       - JWT_SECRET=funchat_super_secret_jwt_key_123!
       - PORT=5000
-    volumes:
-      - funchat_db:/app/backend/data
-
-volumes:
-  funchat_db:

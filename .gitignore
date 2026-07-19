@@ -29,6 +29,7 @@ lerna-debug.log*
 # Editor/System files
 .vscode/
 !.vscode/extensions.json
+.agents/
 .idea/
 .DS_Store
 *.suo

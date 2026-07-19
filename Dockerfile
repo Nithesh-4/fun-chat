@@ -10,9 +10,6 @@ RUN npm run build
 FROM node:20-alpine
 WORKDIR /app
 
-# Set default environment variable for SQLite database path
-ENV DATABASE_URL="file:./dev.db"
-
 # Install backend dependencies
 COPY backend/package*.json ./backend/
 RUN cd backend && npm install --omit=dev

@@ -7,6 +7,7 @@ dist/
 **/dist/
 dist-ssr/
 **/dist-ssr/
+frontend/build/
 
 # Environment files
 .env

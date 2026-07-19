@@ -49,6 +49,12 @@ const memoryCache = {
 const dynamicCache = {
   async set(key, value, mode, duration) {
     const active = redis || memoryCache;
+    if (active === redis) {
+      if (mode && duration) {
+        return redis.set(key, value, mode, duration);
+      }
+      return redis.set(key, value);
+    }
     return active.set(key, value, mode, duration);
   },
   async get(key) {
